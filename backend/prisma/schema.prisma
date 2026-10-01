@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+  schemas  = ["general"]
+}
+
+model BenefactorEdata {
+  uid                   Int       @id @default(autoincrement()) @map("UID")
+  code                  String    @map("Code") @db.VarChar(20)
+  name                  String    @map("Name") @db.VarChar(150)
+  address               String?   @map("Address") @db.VarChar(200)
+  city                  Int?      @map("City")
+  contactPerson         String?   @map("ContactPerson") @db.VarChar(100)
+  phone                 String?   @map("Phone") @db.VarChar(50)
+  email                 String?   @map("Email") @db.VarChar(100)
+  company               Int?      @map("Company")
+  fYear                 Int?      @map("FYear")
+  deleted               Boolean   @default(false) @map("Deleted")
+  userId                Int?      @map("User")
+  scanId                String?   @map("ScanID") @db.UniqueIdentifier
+  insertedOn            DateTime? @map("InsertedOn") @db.DateTime2
+  insertedBy            Int?      @map("InsertedBy")
+  host                  String?   @map("Host") @db.VarChar(50)
+  version               Bytes?    @map("Version")
+  benefactorType        Int?      @map("BenefactorType")
+  country               Int?      @map("Country")
+  fax                   String?   @map("Fax") @db.VarChar(50)
+  trn                   String?   @map("TRN") @db.VarChar(20)
+  website               String?   @map("Website") @db.VarChar(50)
+  legalName             String?   @map("LegalName") @db.VarChar(200)
+  tradingName           String?   @map("TradingName") @db.VarChar(200)
+  tin                   String?   @map("TIN") @db.VarChar(50)
+  tradeLicenseNo        String?   @map("TradeLicenseNo") @db.VarChar(100)
+  tradeLicenseType      String?   @map("TradeLicenseType") @db.VarChar(100)
+  tradeLicenseAuthority String?   @map("TradeLicenseAuthority") @db.VarChar(200)
+  endpointId            String?   @map("EndpointID") @db.VarChar(100)
+  endpointScheme        String?   @map("EndpointScheme") @db.VarChar(100)
+  state                 Int?      @map("State")
+  postalCode            String?   @map("PostalCode") @db.VarChar(20)
+
+  @@map("BenefactorEdata")
+  @@schema("general")
+}
