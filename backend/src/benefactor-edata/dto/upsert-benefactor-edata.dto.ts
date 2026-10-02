@@ -30,8 +30,9 @@ export class UpsertBenefactorEdataDto {
   address?: string;
 
   @IsOptional()
-  @IsInt()
-  city?: number;
+  @IsString()
+  @MaxLength(150)
+  city?: string;
 
   @IsOptional()
   @IsString()
@@ -90,8 +91,9 @@ export class UpsertBenefactorEdataDto {
   benefactorType?: number;
 
   @IsOptional()
-  @IsInt()
-  country?: number;
+  @IsString()
+  @MaxLength(100)
+  country?: string;
 
   @IsOptional()
   @IsString()
@@ -149,8 +151,9 @@ export class UpsertBenefactorEdataDto {
   endpointScheme?: string;
 
   @IsOptional()
-  @IsInt()
-  state?: number;
+  @IsString()
+  @MaxLength(100)
+  state?: string;
 
   @IsOptional()
   @IsString()

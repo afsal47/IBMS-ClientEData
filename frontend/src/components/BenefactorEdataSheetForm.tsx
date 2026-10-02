@@ -5,6 +5,8 @@ import {
   type BenefactorEdataFormState,
 } from '../types/benefactor-edata'
 import { formStateToPayload } from '../utils/benefactor-form'
+import { advanceFormOnEnter } from '../utils/form-enter-navigation'
+import { AddressLocationFields } from './AddressLocationFields'
 import '../styles/benefactor-sheet.css'
 
 type FieldDef = {
@@ -59,7 +61,7 @@ const SECTIONS: FormSection[] = [
   {
     id: 'location',
     title: 'Address',
-    description: 'Country, state, and city use your system lookup IDs.',
+    description: 'Select country, then state or region, then city.',
     fields: [
       {
         key: 'address',
@@ -68,9 +70,6 @@ const SECTIONS: FormSection[] = [
         fullWidth: true,
         placeholder: 'Building, street, area',
       },
-      { key: 'country', label: 'Country', type: 'number', placeholder: 'Country ID' },
-      { key: 'state', label: 'State / region', type: 'number', placeholder: 'State ID' },
-      { key: 'city', label: 'City', type: 'number', placeholder: 'City ID' },
       { key: 'postalCode', label: 'Postal code', maxLength: 20, placeholder: 'ZIP / postal code' },
     ],
   },
@@ -112,11 +111,6 @@ const SECTIONS: FormSection[] = [
   },
 ]
 
-/** Field order matches two-column grid: left → right, then next row (per section, then next section). */
-const FIELD_ENTER_ORDER: (keyof BenefactorEdataFormState)[] = SECTIONS.flatMap(
-  (section) => section.fields.map((field) => field.key),
-)
-
 const FIELDS_PRESERVE_CASE: (keyof BenefactorEdataFormState)[] = [
   'email',
   'website',
@@ -134,14 +128,6 @@ function preservesInputCase(key: keyof BenefactorEdataFormState): boolean {
   return FIELDS_PRESERVE_CASE.includes(key)
 }
 
-function focusFormField(key: keyof BenefactorEdataFormState) {
-  const el = document.getElementById(`field-${key}`)
-  if (el instanceof HTMLInputElement) {
-    el.focus()
-    el.select()
-  }
-}
-
 function advanceFocusOnEnter(
   e: KeyboardEvent<HTMLInputElement>,
   key: keyof BenefactorEdataFormState,
@@ -149,19 +135,7 @@ function advanceFocusOnEnter(
   if (e.key !== 'Enter') return
 
   e.preventDefault()
-
-  const index = FIELD_ENTER_ORDER.indexOf(key)
-  const nextKey = index >= 0 ? FIELD_ENTER_ORDER[index + 1] : undefined
-
-  if (nextKey) {
-    focusFormField(nextKey)
-    return
-  }
-
-  const formEl = document.getElementById('benefactor-client-form')
-  if (formEl instanceof HTMLFormElement) {
-    formEl.requestSubmit()
-  }
+  advanceFormOnEnter(key)
 }
 
 function FieldControl({
@@ -342,14 +316,47 @@ export function BenefactorEdataSheetForm() {
                 ) : null}
               </div>
               <div className="form-section-grid">
-                {section.fields.map((field) => (
-                  <FieldControl
-                    key={field.key}
-                    field={field}
-                    form={form}
-                    updateField={updateField}
-                  />
-                ))}
+                {section.id === 'location' ? (
+                  <>
+                    {section.fields
+                      .filter((field) => field.key === 'address')
+                      .map((field) => (
+                        <FieldControl
+                          key={field.key}
+                          field={field}
+                          form={form}
+                          updateField={updateField}
+                        />
+                      ))}
+                    <AddressLocationFields
+                      country={form.country}
+                      state={form.state}
+                      city={form.city}
+                      onCountryChange={(name) => updateField('country', name)}
+                      onStateChange={(name) => updateField('state', name)}
+                      onCityChange={(name) => updateField('city', name)}
+                    />
+                    {section.fields
+                      .filter((field) => field.key === 'postalCode')
+                      .map((field) => (
+                        <FieldControl
+                          key={field.key}
+                          field={field}
+                          form={form}
+                          updateField={updateField}
+                        />
+                      ))}
+                  </>
+                ) : (
+                  section.fields.map((field) => (
+                    <FieldControl
+                      key={field.key}
+                      field={field}
+                      form={form}
+                      updateField={updateField}
+                    />
+                  ))
+                )}
               </div>
             </section>
           ))}

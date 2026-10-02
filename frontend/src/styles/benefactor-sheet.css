@@ -252,6 +252,70 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
+.form-select {
+  cursor: pointer;
+  appearance: auto;
+}
+
+.form-select:disabled {
+  cursor: not-allowed;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.searchable-select-control {
+  position: relative;
+}
+
+.searchable-select-input:disabled {
+  cursor: not-allowed;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.searchable-select-list {
+  position: absolute;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  margin: 0;
+  padding: 4px 0;
+  max-height: 240px;
+  overflow-y: auto;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.searchable-select-option {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.searchable-select-option:hover,
+.searchable-select-option-active {
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.searchable-select-hint {
+  padding: 8px 12px;
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
 .client-form-footer {
   padding: 12px 24px 16px;
   text-align: center;
