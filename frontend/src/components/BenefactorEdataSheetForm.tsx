@@ -5,6 +5,7 @@ import {
   type BenefactorEdataFormState,
 } from '../types/benefactor-edata'
 import { formStateToPayload } from '../utils/benefactor-form'
+import { AddressLocationFields } from './AddressLocationFields'
 import '../styles/benefactor-sheet.css'
 
 type FieldDef = {
@@ -59,7 +60,7 @@ const SECTIONS: FormSection[] = [
   {
     id: 'location',
     title: 'Address',
-    description: 'Country, state, and city use your system lookup IDs.',
+    description: 'Select country, then state or region, then city.',
     fields: [
       {
         key: 'address',
@@ -68,9 +69,6 @@ const SECTIONS: FormSection[] = [
         fullWidth: true,
         placeholder: 'Building, street, area',
       },
-      { key: 'country', label: 'Country', type: 'number', placeholder: 'Country ID' },
-      { key: 'state', label: 'State / region', type: 'number', placeholder: 'State ID' },
-      { key: 'city', label: 'City', type: 'number', placeholder: 'City ID' },
       { key: 'postalCode', label: 'Postal code', maxLength: 20, placeholder: 'ZIP / postal code' },
     ],
   },
@@ -342,14 +340,47 @@ export function BenefactorEdataSheetForm() {
                 ) : null}
               </div>
               <div className="form-section-grid">
-                {section.fields.map((field) => (
-                  <FieldControl
-                    key={field.key}
-                    field={field}
-                    form={form}
-                    updateField={updateField}
-                  />
-                ))}
+                {section.id === 'location' ? (
+                  <>
+                    {section.fields
+                      .filter((field) => field.key === 'address')
+                      .map((field) => (
+                        <FieldControl
+                          key={field.key}
+                          field={field}
+                          form={form}
+                          updateField={updateField}
+                        />
+                      ))}
+                    <AddressLocationFields
+                      country={form.country}
+                      state={form.state}
+                      city={form.city}
+                      onCountryChange={(name) => updateField('country', name)}
+                      onStateChange={(name) => updateField('state', name)}
+                      onCityChange={(name) => updateField('city', name)}
+                    />
+                    {section.fields
+                      .filter((field) => field.key === 'postalCode')
+                      .map((field) => (
+                        <FieldControl
+                          key={field.key}
+                          field={field}
+                          form={form}
+                          updateField={updateField}
+                        />
+                      ))}
+                  </>
+                ) : (
+                  section.fields.map((field) => (
+                    <FieldControl
+                      key={field.key}
+                      field={field}
+                      form={form}
+                      updateField={updateField}
+                    />
+                  ))
+                )}
               </div>
             </section>
           ))}

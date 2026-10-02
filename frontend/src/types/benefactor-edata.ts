@@ -38,7 +38,7 @@ export type UpsertBenefactorEdataPayload = {
   name: string
   deleted: boolean
   address?: string
-  city?: number
+  city?: string
   contactPerson?: string
   phone?: string
   email?: string
@@ -51,7 +51,7 @@ export type UpsertBenefactorEdataPayload = {
   host?: string
   versionBase64?: string
   benefactorType?: number
-  country?: number
+  country?: string
   fax?: string
   trn?: string
   website?: string
@@ -63,7 +63,7 @@ export type UpsertBenefactorEdataPayload = {
   tradeLicenseAuthority?: string
   endpointId?: string
   endpointScheme?: string
-  state?: number
+  state?: string
   postalCode?: string
 }
 

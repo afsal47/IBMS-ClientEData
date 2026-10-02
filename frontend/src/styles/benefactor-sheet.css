@@ -252,6 +252,17 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
+.form-select {
+  cursor: pointer;
+  appearance: auto;
+}
+
+.form-select:disabled {
+  cursor: not-allowed;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
 .client-form-footer {
   padding: 12px 24px 16px;
   text-align: center;

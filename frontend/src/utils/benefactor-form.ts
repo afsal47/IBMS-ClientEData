@@ -49,6 +49,9 @@ export function formStateToPayload(
     'endpointScheme',
     'postalCode',
     'scanId',
+    'country',
+    'state',
+    'city',
   ]
 
   for (const key of optionalStrings) {
@@ -59,14 +62,11 @@ export function formStateToPayload(
   }
 
   const intFields: (keyof BenefactorEdataFormState)[] = [
-    'city',
     'company',
     'fYear',
     'userId',
     'insertedBy',
     'benefactorType',
-    'country',
-    'state',
   ]
 
   for (const key of intFields) {
