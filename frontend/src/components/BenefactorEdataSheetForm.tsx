@@ -5,6 +5,7 @@ import {
   type BenefactorEdataFormState,
 } from '../types/benefactor-edata'
 import { formStateToPayload } from '../utils/benefactor-form'
+import { advanceFormOnEnter } from '../utils/form-enter-navigation'
 import { AddressLocationFields } from './AddressLocationFields'
 import '../styles/benefactor-sheet.css'
 
@@ -110,11 +111,6 @@ const SECTIONS: FormSection[] = [
   },
 ]
 
-/** Field order matches two-column grid: left → right, then next row (per section, then next section). */
-const FIELD_ENTER_ORDER: (keyof BenefactorEdataFormState)[] = SECTIONS.flatMap(
-  (section) => section.fields.map((field) => field.key),
-)
-
 const FIELDS_PRESERVE_CASE: (keyof BenefactorEdataFormState)[] = [
   'email',
   'website',
@@ -132,14 +128,6 @@ function preservesInputCase(key: keyof BenefactorEdataFormState): boolean {
   return FIELDS_PRESERVE_CASE.includes(key)
 }
 
-function focusFormField(key: keyof BenefactorEdataFormState) {
-  const el = document.getElementById(`field-${key}`)
-  if (el instanceof HTMLInputElement) {
-    el.focus()
-    el.select()
-  }
-}
-
 function advanceFocusOnEnter(
   e: KeyboardEvent<HTMLInputElement>,
   key: keyof BenefactorEdataFormState,
@@ -147,19 +135,7 @@ function advanceFocusOnEnter(
   if (e.key !== 'Enter') return
 
   e.preventDefault()
-
-  const index = FIELD_ENTER_ORDER.indexOf(key)
-  const nextKey = index >= 0 ? FIELD_ENTER_ORDER[index + 1] : undefined
-
-  if (nextKey) {
-    focusFormField(nextKey)
-    return
-  }
-
-  const formEl = document.getElementById('benefactor-client-form')
-  if (formEl instanceof HTMLFormElement) {
-    formEl.requestSubmit()
-  }
+  advanceFormOnEnter(key)
 }
 
 function FieldControl({
