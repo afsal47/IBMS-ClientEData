@@ -1,16 +1,23 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { City, Country, State } from 'country-state-city'
+import {
+  countryDisplayName,
+  stateDisplayName,
+} from '../utils/location-codes'
 import {
   SearchableSelect,
   type SearchableSelectOption,
 } from './SearchableSelect'
 
 type AddressLocationFieldsProps = {
-  country: string
-  state: string
+  /** ISO country code stored in DB */
+  countryCode: string
+  /** ISO state code stored in DB */
+  stateCode: string
+  /** City name stored in DB */
   city: string
-  onCountryChange: (name: string) => void
-  onStateChange: (name: string) => void
+  onCountryCodeChange: (isoCode: string) => void
+  onStateCodeChange: (isoCode: string) => void
   onCityChange: (name: string) => void
 }
 
@@ -23,16 +30,13 @@ function countrySearchText(isoCode: string, name: string): string {
 }
 
 export function AddressLocationFields({
-  country,
-  state,
+  countryCode,
+  stateCode,
   city,
-  onCountryChange,
-  onStateChange,
+  onCountryCodeChange,
+  onStateCodeChange,
   onCityChange,
 }: AddressLocationFieldsProps) {
-  const [countryCode, setCountryCode] = useState('')
-  const [stateCode, setStateCode] = useState('')
-
   const countries = useMemo(
     () =>
       Country.getAllCountries().sort((a, b) =>
@@ -91,47 +95,29 @@ export function AddressLocationFields({
     [cities],
   )
 
-  useEffect(() => {
-    if (!country) {
-      setCountryCode('')
-      setStateCode('')
-    }
-  }, [country])
-
-  useEffect(() => {
-    if (!state) {
-      setStateCode('')
-    }
-  }, [state])
+  const countryName = countryDisplayName(countryCode)
+  const stateName = stateDisplayName(countryCode, stateCode)
 
   function clearCountry() {
-    setCountryCode('')
-    setStateCode('')
-    onCountryChange('')
-    onStateChange('')
+    onCountryCodeChange('')
+    onStateCodeChange('')
     onCityChange('')
   }
 
   function selectCountry(option: SearchableSelectOption) {
-    setCountryCode(option.value)
-    setStateCode('')
-    onStateChange('')
+    onCountryCodeChange(option.value)
+    onStateCodeChange('')
     onCityChange('')
-    const match = countries.find((c) => c.isoCode === option.value)
-    onCountryChange(match?.name ?? '')
   }
 
   function clearState() {
-    setStateCode('')
-    onStateChange('')
+    onStateCodeChange('')
     onCityChange('')
   }
 
   function selectState(option: SearchableSelectOption) {
-    setStateCode(option.value)
+    onStateCodeChange(option.value)
     onCityChange('')
-    const match = states.find((s) => s.isoCode === option.value)
-    onStateChange(match?.name ?? '')
   }
 
   function selectCity(option: SearchableSelectOption) {
@@ -144,7 +130,7 @@ export function AddressLocationFields({
         id="field-country"
         label="Country"
         placeholder="Type country name or code…"
-        selectedLabel={country}
+        selectedLabel={countryName}
         options={countryOptions}
         maxResults={250}
         enterFieldKey="country"
@@ -159,7 +145,7 @@ export function AddressLocationFields({
         placeholder={
           countryCode ? 'Type state name or code…' : 'Select a country first'
         }
-        selectedLabel={state}
+        selectedLabel={stateName}
         options={stateOptions}
         maxResults={300}
         enterFieldKey="state"

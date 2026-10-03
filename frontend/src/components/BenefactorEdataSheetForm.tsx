@@ -1,12 +1,19 @@
-import { useState, type FormEvent, type KeyboardEvent } from 'react'
-import { upsertBenefactorEdata } from '../api/benefactor-edata'
+import { useCallback, useEffect, useState, type FormEvent, type KeyboardEvent } from 'react'
+import {
+  getBenefactorEdata,
+  listBenefactorEdata,
+  upsertBenefactorEdata,
+} from '../api/benefactor-edata'
 import {
   emptyBenefactorForm,
   type BenefactorEdataFormState,
+  type BenefactorEdataListItem,
 } from '../types/benefactor-edata'
+import { recordToFormState } from '../utils/benefactor-record-mapper'
 import { formStateToPayload } from '../utils/benefactor-form'
 import { advanceFormOnEnter } from '../utils/form-enter-navigation'
 import { AddressLocationFields } from './AddressLocationFields'
+import { BenefactorRecordsPanel } from './BenefactorRecordsPanel'
 import '../styles/benefactor-sheet.css'
 
 type FieldDef = {
@@ -185,10 +192,61 @@ function FieldControl({
 export function BenefactorEdataSheetForm() {
   const [form, setForm] = useState(emptyBenefactorForm)
   const [savedUid, setSavedUid] = useState<number | null>(null)
+  const [selectedUid, setSelectedUid] = useState<number | null>(null)
+  const [records, setRecords] = useState<BenefactorEdataListItem[]>([])
+  const [recordsLoading, setRecordsLoading] = useState(true)
+  const [formInstanceKey, setFormInstanceKey] = useState(0)
   const [status, setStatus] = useState<'idle' | 'saving' | 'success' | 'error'>(
     'idle',
   )
   const [message, setMessage] = useState('')
+  const [recordsError, setRecordsError] = useState<string | null>(null)
+
+  const refreshRecords = useCallback(async () => {
+    setRecordsLoading(true)
+    setRecordsError(null)
+    try {
+      const rows = await listBenefactorEdata()
+      setRecords(rows)
+    } catch (err) {
+      setRecords([])
+      setRecordsError(
+        err instanceof Error
+          ? err.message
+          : 'Could not load saved records from the API.',
+      )
+    } finally {
+      setRecordsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void refreshRecords()
+  }, [refreshRecords])
+
+  function resetFormForNewEntry() {
+    setForm(emptyBenefactorForm())
+    setSavedUid(null)
+    setSelectedUid(null)
+    setFormInstanceKey((k) => k + 1)
+  }
+
+  async function handleSelectRecord(uid: number) {
+    setStatus('idle')
+    setMessage('')
+    try {
+      const record = await getBenefactorEdata(uid)
+      setForm(recordToFormState(record))
+      setSavedUid(record.uid)
+      setSelectedUid(record.uid)
+      setFormInstanceKey((k) => k + 1)
+    } catch (err) {
+      setStatus('error')
+      setMessage(
+        err instanceof Error ? err.message : 'Unable to load record.',
+      )
+    }
+  }
 
   function updateField<K extends keyof BenefactorEdataFormState>(
     key: K,
@@ -213,10 +271,8 @@ export function BenefactorEdataSheetForm() {
 
     try {
       let payload = formStateToPayload(form, savedUid)
-      let result: { uid: number } & Record<string, unknown>
-
       try {
-        result = await upsertBenefactorEdata(payload)
+        await upsertBenefactorEdata(payload)
       } catch (firstErr) {
         const msg =
           firstErr instanceof Error ? firstErr.message : String(firstErr)
@@ -231,18 +287,17 @@ export function BenefactorEdataSheetForm() {
         setSavedUid(null)
         reportingUpdate = false
         payload = formStateToPayload(form, null)
-        result = await upsertBenefactorEdata(payload)
+        await upsertBenefactorEdata(payload)
       }
 
-      if (typeof result.uid === 'number') {
-        setSavedUid(result.uid)
-      }
       setStatus('success')
       setMessage(
         reportingUpdate
           ? `Your information was updated successfully.`
           : `Thank you — your information was saved successfully.`,
       )
+      await refreshRecords()
+      resetFormForNewEntry()
     } catch (err) {
       setStatus('error')
       setMessage(err instanceof Error ? err.message : 'Unable to save. Please try again.')
@@ -250,8 +305,7 @@ export function BenefactorEdataSheetForm() {
   }
 
   function handleNewRecord() {
-    setForm(emptyBenefactorForm())
-    setSavedUid(null)
+    resetFormForNewEntry()
     setStatus('idle')
     setMessage('')
   }
@@ -298,14 +352,15 @@ export function BenefactorEdataSheetForm() {
         </div>
       ) : null}
 
-      <main className="client-form-main">
-        <form
-          id="benefactor-client-form"
-          onSubmit={handleSubmit}
-          className="client-form"
-          noValidate
-        >
-          {SECTIONS.map((section) => (
+      <div className="client-form-body">
+        <main className="client-form-main">
+          <form
+            id="benefactor-client-form"
+            onSubmit={handleSubmit}
+            className="client-form"
+            noValidate
+          >
+            {SECTIONS.map((section) => (
             <section key={section.id} className="form-section" aria-labelledby={`section-${section.id}`}>
               <div className="form-section-head">
                 <h2 id={`section-${section.id}`} className="form-section-title">
@@ -329,11 +384,14 @@ export function BenefactorEdataSheetForm() {
                         />
                       ))}
                     <AddressLocationFields
-                      country={form.country}
-                      state={form.state}
+                      key={formInstanceKey}
+                      countryCode={form.country}
+                      stateCode={form.state}
                       city={form.city}
-                      onCountryChange={(name) => updateField('country', name)}
-                      onStateChange={(name) => updateField('state', name)}
+                      onCountryCodeChange={(code) =>
+                        updateField('country', code)
+                      }
+                      onStateCodeChange={(code) => updateField('state', code)}
                       onCityChange={(name) => updateField('city', name)}
                     />
                     {section.fields
@@ -359,9 +417,19 @@ export function BenefactorEdataSheetForm() {
                 )}
               </div>
             </section>
-          ))}
-        </form>
-      </main>
+            ))}
+          </form>
+        </main>
+
+        <BenefactorRecordsPanel
+          records={records}
+          selectedUid={selectedUid}
+          loading={recordsLoading}
+          loadError={recordsError}
+          onSelect={handleSelectRecord}
+          onRetry={() => void refreshRecords()}
+        />
+      </div>
 
       <footer className="client-form-footer">
         <p>© IBMS Client E-Data · Your data is transmitted over a secure connection.</p>

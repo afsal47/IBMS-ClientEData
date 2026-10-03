@@ -3,11 +3,38 @@ import { Prisma, BenefactorEdata } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { UpsertBenefactorEdataDto } from './dto/upsert-benefactor-edata.dto.js';
 
+export type BenefactorEdataResponse = Omit<BenefactorEdata, 'version'> & {
+  versionBase64?: string;
+};
+
 @Injectable()
 export class BenefactorEdataService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async upsert(dto: UpsertBenefactorEdataDto): Promise<BenefactorEdata> {
+  async listSummaries(): Promise<
+    Pick<BenefactorEdata, 'uid' | 'code' | 'name'>[]
+  > {
+    return this.prisma.benefactorEdata.findMany({
+      select: { uid: true, code: true, name: true },
+      orderBy: [{ code: 'asc' }, { uid: 'asc' }],
+    });
+  }
+
+  async findOne(uid: number): Promise<BenefactorEdataResponse> {
+    const row = await this.prisma.benefactorEdata.findUnique({
+      where: { uid },
+    });
+
+    if (!row) {
+      throw new NotFoundException(
+        `BenefactorEdata with UID ${uid} was not found`,
+      );
+    }
+
+    return this.toResponse(row);
+  }
+
+  async upsert(dto: UpsertBenefactorEdataDto): Promise<BenefactorEdataResponse> {
     const data = this.toWriteData(dto);
 
     if (dto.uid != null && dto.uid > 0) {
@@ -16,10 +43,11 @@ export class BenefactorEdataService {
       });
 
       if (existing) {
-        return this.prisma.benefactorEdata.update({
+        const updated = await this.prisma.benefactorEdata.update({
           where: { uid: dto.uid },
           data,
         });
+        return this.toResponse(updated);
       }
 
       throw new NotFoundException(
@@ -27,7 +55,18 @@ export class BenefactorEdataService {
       );
     }
 
-    return this.prisma.benefactorEdata.create({ data });
+    const created = await this.prisma.benefactorEdata.create({ data });
+    return this.toResponse(created);
+  }
+
+  private toResponse(row: BenefactorEdata): BenefactorEdataResponse {
+    const { version, ...rest } = row;
+    return {
+      ...rest,
+      versionBase64: version?.length
+        ? Buffer.from(version).toString('base64')
+        : undefined,
+    };
   }
 
   private toWriteData(
