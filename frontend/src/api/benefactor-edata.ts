@@ -1,6 +1,11 @@
-import type { UpsertBenefactorEdataPayload } from '../types/benefactor-edata'
+import type {
+  BenefactorEdataListItem,
+  BenefactorEdataRecord,
+  UpsertBenefactorEdataPayload,
+} from '../types/benefactor-edata'
 
-const baseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+/** Empty string uses same origin (Vite dev proxy → backend). */
+const baseUrl = import.meta.env.VITE_API_URL ?? ''
 
 function parseApiErrorMessage(data: unknown, status: number): string {
   if (data && typeof data === 'object' && 'message' in data) {
@@ -15,21 +20,44 @@ function parseApiErrorMessage(data: unknown, status: number): string {
   return `Request failed (${status})`
 }
 
-export async function upsertBenefactorEdata(
-  payload: UpsertBenefactorEdataPayload,
-): Promise<{ uid: number } & Record<string, unknown>> {
-  let response: Response
+async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
   try {
-    response = await fetch(`${baseUrl}/benefactor-edata/upsert`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
+    return await fetch(`${baseUrl}${path}`, init)
   } catch {
     throw new Error(
       'Cannot reach the API. Start the backend (npm run start:dev in backend) and ensure SQL Server is running on localhost:1433.',
     )
   }
+}
+
+export async function listBenefactorEdata(): Promise<BenefactorEdataListItem[]> {
+  const response = await apiFetch('/benefactor-edata/list')
+  const data: unknown = await response.json().catch(() => null)
+  if (!response.ok) {
+    throw new Error(parseApiErrorMessage(data, response.status))
+  }
+  return data as BenefactorEdataListItem[]
+}
+
+export async function getBenefactorEdata(
+  uid: number,
+): Promise<BenefactorEdataRecord> {
+  const response = await apiFetch(`/benefactor-edata/${uid}`)
+  const data: unknown = await response.json().catch(() => null)
+  if (!response.ok) {
+    throw new Error(parseApiErrorMessage(data, response.status))
+  }
+  return data as BenefactorEdataRecord
+}
+
+export async function upsertBenefactorEdata(
+  payload: UpsertBenefactorEdataPayload,
+): Promise<BenefactorEdataRecord> {
+  const response = await apiFetch('/benefactor-edata/upsert', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
 
   const data: unknown = await response.json().catch(() => null)
 
@@ -37,5 +65,5 @@ export async function upsertBenefactorEdata(
     throw new Error(parseApiErrorMessage(data, response.status))
   }
 
-  return data as { uid: number } & Record<string, unknown>
+  return data as BenefactorEdataRecord
 }

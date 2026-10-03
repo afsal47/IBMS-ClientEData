@@ -1,3 +1,44 @@
+export type BenefactorEdataListItem = {
+  uid: number
+  code: string
+  name: string
+}
+
+export type BenefactorEdataRecord = {
+  uid: number
+  code: string
+  name: string
+  address?: string | null
+  city?: string | null
+  contactPerson?: string | null
+  phone?: string | null
+  email?: string | null
+  company?: number | null
+  fYear?: number | null
+  deleted: boolean
+  userId?: number | null
+  scanId?: string | null
+  insertedOn?: string | null
+  insertedBy?: number | null
+  host?: string | null
+  versionBase64?: string | null
+  benefactorType?: number | null
+  country?: string | null
+  fax?: string | null
+  trn?: string | null
+  website?: string | null
+  legalName?: string | null
+  tradingName?: string | null
+  tin?: string | null
+  tradeLicenseNo?: string | null
+  tradeLicenseType?: string | null
+  tradeLicenseAuthority?: string | null
+  endpointId?: string | null
+  endpointScheme?: string | null
+  state?: string | null
+  postalCode?: string | null
+}
+
 export type BenefactorEdataFormState = {
   code: string
   name: string
