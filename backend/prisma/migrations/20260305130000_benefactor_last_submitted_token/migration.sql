@@ -1,0 +1,17 @@
+BEGIN TRY
+BEGIN TRAN;
+
+IF COL_LENGTH('general.BenefactorEdata', 'LastSubmittedFormToken') IS NULL
+BEGIN
+    ALTER TABLE [general].[BenefactorEdata] ADD [LastSubmittedFormToken] VARCHAR(36) NULL;
+END;
+
+COMMIT TRAN;
+END TRY
+BEGIN CATCH
+IF @@TRANCOUNT > 0
+BEGIN
+    ROLLBACK TRAN;
+END;
+THROW;
+END CATCH;

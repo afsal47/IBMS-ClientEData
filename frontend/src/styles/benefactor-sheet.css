@@ -442,6 +442,46 @@
   }
 }
 
+.client-form-body-single {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.client-form-page-centered {
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.client-field-readonly-value {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+}
+
+.client-form-error-card,
+.client-form-success-card {
+  max-width: 32rem;
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.client-form-success-lead {
+  font-size: 1.05rem;
+  color: #166534;
+  font-weight: 500;
+  margin: 0 0 12px;
+}
+
 @media (max-width: 720px) {
   .form-section-grid {
     grid-template-columns: 1fr;
