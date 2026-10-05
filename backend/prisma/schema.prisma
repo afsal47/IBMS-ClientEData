@@ -41,6 +41,11 @@ model BenefactorEdata {
   endpointScheme        String?   @map("EndpointScheme") @db.VarChar(100)
   state                 String?   @map("State") @db.NVarChar(100)
   postalCode            String?   @map("PostalCode") @db.VarChar(20)
+  formToken             String?   @unique @map("FormToken") @db.VarChar(36)
+  formTokenExpiresAt    DateTime? @map("FormTokenExpiresAt") @db.DateTime2
+  isFormCompleted       Boolean   @default(false) @map("IsFormCompleted")
+  /** Set when form is submitted so old links can show “already submitted”. */
+  lastSubmittedFormToken String?  @unique @map("LastSubmittedFormToken") @db.VarChar(36)
 
   @@map("BenefactorEdata")
   @@schema("general")

@@ -37,6 +37,8 @@ export type BenefactorEdataRecord = {
   endpointScheme?: string | null
   state?: string | null
   postalCode?: string | null
+  isFormCompleted?: boolean
+  formTokenExpiresAt?: string | null
 }
 
 export type BenefactorEdataFormState = {

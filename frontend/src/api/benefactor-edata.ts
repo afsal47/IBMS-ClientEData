@@ -67,3 +67,19 @@ export async function upsertBenefactorEdata(
 
   return data as BenefactorEdataRecord
 }
+
+export async function sendBenefactorFormLink(
+  uid: number,
+  email: string,
+): Promise<{ message: string; email: string }> {
+  const response = await apiFetch(`/benefactor-edata/${uid}/send-form-link`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email.trim() }),
+  })
+  const data: unknown = await response.json().catch(() => null)
+  if (!response.ok) {
+    throw new Error(parseApiErrorMessage(data, response.status))
+  }
+  return data as { message: string; email: string }
+}

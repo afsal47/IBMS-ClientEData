@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent, type KeyboardEvent } 
 import {
   getBenefactorEdata,
   listBenefactorEdata,
+  sendBenefactorFormLink,
   upsertBenefactorEdata,
 } from '../api/benefactor-edata'
 import {
@@ -196,9 +197,10 @@ export function BenefactorEdataSheetForm() {
   const [records, setRecords] = useState<BenefactorEdataListItem[]>([])
   const [recordsLoading, setRecordsLoading] = useState(true)
   const [formInstanceKey, setFormInstanceKey] = useState(0)
-  const [status, setStatus] = useState<'idle' | 'saving' | 'success' | 'error'>(
-    'idle',
-  )
+  const [status, setStatus] = useState<
+    'idle' | 'saving' | 'success' | 'error' | 'sending-link'
+  >('idle')
+  const [isFormCompleted, setIsFormCompleted] = useState(false)
   const [message, setMessage] = useState('')
   const [recordsError, setRecordsError] = useState<string | null>(null)
 
@@ -228,6 +230,7 @@ export function BenefactorEdataSheetForm() {
     setForm(emptyBenefactorForm())
     setSavedUid(null)
     setSelectedUid(null)
+    setIsFormCompleted(false)
     setFormInstanceKey((k) => k + 1)
   }
 
@@ -239,6 +242,7 @@ export function BenefactorEdataSheetForm() {
       setForm(recordToFormState(record))
       setSavedUid(record.uid)
       setSelectedUid(record.uid)
+      setIsFormCompleted(record.isFormCompleted === true)
       setFormInstanceKey((k) => k + 1)
     } catch (err) {
       setStatus('error')
@@ -310,6 +314,35 @@ export function BenefactorEdataSheetForm() {
     setMessage('')
   }
 
+  async function handleSendFormLink() {
+    if (selectedUid == null) {
+      setStatus('error')
+      setMessage('Select a saved record before sending the form link.')
+      return
+    }
+    if (!form.email.trim()) {
+      setStatus('error')
+      setMessage('Add an email address on this record before sending the link.')
+      return
+    }
+
+    setStatus('sending-link')
+    setMessage('')
+    try {
+      const emailTo = form.email.trim()
+      const result = await sendBenefactorFormLink(selectedUid, emailTo)
+      setStatus('success')
+      setMessage(
+        `${result.message} Delivery was requested for ${result.email}.`,
+      )
+    } catch (err) {
+      setStatus('error')
+      setMessage(
+        err instanceof Error ? err.message : 'Could not send the form link.',
+      )
+    }
+  }
+
   return (
     <div className="client-form-page">
       <header className="client-form-header">
@@ -332,10 +365,23 @@ export function BenefactorEdataSheetForm() {
               Start over
             </button>
             <button
+              type="button"
+              className="client-btn client-btn-ghost"
+              onClick={() => void handleSendFormLink()}
+              disabled={
+                status === 'saving' ||
+                status === 'sending-link' ||
+                selectedUid == null
+              }
+              title="Email a secure link to the address on this record"
+            >
+              {status === 'sending-link' ? 'Sending link…' : 'Email form link'}
+            </button>
+            <button
               type="submit"
               form="benefactor-client-form"
               className="client-btn client-btn-primary"
-              disabled={status === 'saving'}
+              disabled={status === 'saving' || status === 'sending-link'}
             >
               {status === 'saving' ? 'Saving…' : 'Submit'}
             </button>
